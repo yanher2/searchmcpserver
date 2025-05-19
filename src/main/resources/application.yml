@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: jd-laptop-search
+  datasource:
+    url: jdbc:postgresql://localhost:5432/jd_laptops
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: false
+
+app:
+  jd:
+    base-url: https://list.jd.com/list.html?cat=670,671,672
+    crawl-interval: 3600000 # 1 hour in milliseconds
+  selenium:
+    chrome-options:
+      - "--headless"
+      - "--disable-gpu"
+      - "--no-sandbox"
+      - "--disable-dev-shm-usage"
+      - "--remote-allow-origins=*"
+
+logging:
+  level:
+    root: INFO
+    com.mathserver: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/jd-laptop-search.log
+    max-size: 10MB
+    max-history: 7
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
