@@ -2,6 +2,7 @@ package com.searchserver.mcp;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.searchserver.config.WebDriverConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -19,7 +20,8 @@ public class JdLaptopMcpClient implements AutoCloseable {
     private final PrintWriter out;
     private final BufferedReader in;
     private final ObjectMapper objectMapper;
-
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(JdLaptopMcpClient.class);
     public JdLaptopMcpClient(String host, int port) throws Exception {
         this.socket = new Socket(host, port);
         this.out = new PrintWriter(socket.getOutputStream(), true);

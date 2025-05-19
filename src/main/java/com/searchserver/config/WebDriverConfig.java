@@ -10,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class WebDriverConfig {
-
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(WebDriverConfig.class);
     @PostConstruct
     void setup() {
         try {

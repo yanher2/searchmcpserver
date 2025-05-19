@@ -13,7 +13,8 @@ import javax.annotation.PostConstruct;
 public class EmbeddingService {
 
     private EmbeddingModel embeddingModel;
-
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(EmbeddingService.class);
     @PostConstruct
     public void init() {
         embeddingModel = new AllMiniLmL6V2EmbeddingModel();
@@ -26,7 +27,11 @@ public class EmbeddingService {
             }
 
             Embedding embedding = embeddingModel.embed(text).content();
-            return embedding.vector();
+            double[] result = new double[embedding.vector().length];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = embedding.vector()[i];
+            }
+            return result;
         } catch (Exception e) {
             log.error("Error generating embedding for text", e);
             return new double[384]; // Return zero vector on error

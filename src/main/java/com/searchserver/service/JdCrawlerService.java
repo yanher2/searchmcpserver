@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -33,9 +34,12 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @Slf4j
 public class JdCrawlerService {
-
-    private final LaptopInfoRepository laptopInfoRepository;
-    private final EmbeddingService embeddingService;
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(JdCrawlerService.class);
+    @Resource
+    private LaptopInfoRepository laptopInfoRepository;
+    @Resource
+    private EmbeddingService embeddingService;
 
     @Value("${app.jd.base-url}")
     private String baseUrl;
@@ -123,13 +127,12 @@ public class JdCrawlerService {
                     BigDecimal price = new BigDecimal(priceText);
 
                     // 创建基本的笔记本信息
-                    LaptopInfo laptop = LaptopInfo.builder()
-                            .productId(productId)
-                            .title(title)
-                            .imageUrl(imageUrl)
-                            .productUrl(productUrl)
-                            .price(price)
-                            .build();
+                    LaptopInfo laptop = new LaptopInfo();
+                            laptop.setProductId(productId);
+                            laptop.setTitle(title);
+                            laptop.setImageUrl(imageUrl);
+                    laptop.setProductUrl(productUrl);
+                    laptop.setPrice(price);
 
                     // 获取详细信息
                     enrichLaptopDetails(laptop);

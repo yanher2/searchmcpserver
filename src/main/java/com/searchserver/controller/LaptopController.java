@@ -7,17 +7,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/laptops")
 @RequiredArgsConstructor
-@Slf4j
 public class LaptopController {
-
-    private final LaptopSearchService laptopSearchService;
-
+    @Resource
+    private LaptopSearchService laptopSearchService;
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(LaptopController.class);
     @GetMapping("/search")
     public ResponseEntity<List<LaptopInfo>> searchLaptops(
             @RequestParam(required = false) String keyword,

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,10 +15,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class LaptopSearchService {
-
-    private final LaptopInfoRepository laptopInfoRepository;
-    private final EmbeddingService embeddingService;
-    private final JdCrawlerService crawlerService;
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(LaptopSearchService.class);
+    @Resource
+    private LaptopInfoRepository laptopInfoRepository;
+    @Resource
+    private EmbeddingService embeddingService;
+    @Resource
+    private JdCrawlerService crawlerService;
 
     public List<LaptopInfo> searchByKeyword(String keyword) {
         return laptopInfoRepository.searchByKeyword(keyword);

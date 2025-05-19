@@ -8,29 +8,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.io.*;
 import java.math.BigDecimal;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class JdLaptopMcpServer {
+    @Resource
+    private LaptopSearchService laptopSearchService;
+    @Resource
+    private ObjectMapper objectMapper;
 
-    private final LaptopSearchService laptopSearchService;
-    private final ObjectMapper objectMapper;
-
-    private final Map<String, String> requestIdToResponse = new ConcurrentHashMap<>();
-    private final Map<String, Object> toolHandlers = new HashMap<>();
-
+    private Map<String, String> requestIdToResponse = new ConcurrentHashMap<>();
+    private Map<String, Object> toolHandlers = new HashMap<>();
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(JdLaptopMcpServer.class);
     @PostConstruct
     public void init() {
         // 注册工具处理器
-        toolHandlers.put("search_laptops", this::handleSearchLaptops);
-        toolHandlers.put("find_similar_laptops", this::handleFindSimilarLaptops);
-        toolHandlers.put("get_laptop_by_id", this::handleGetLaptopById);
-        toolHandlers.put("refresh_laptop_data", this::handleRefreshLaptopData);
+        toolHandlers.put("search_laptops", handleSearchLaptops);
+        toolHandlers.put("find_similar_laptops", handleFindSimilarLaptops);
+        toolHandlers.put("get_laptop_by_id", handleGetLaptopById);
+        toolHandlers.put("refresh_laptop_data", handleRefreshLaptopData);
 
         // 启动MCP服务器
         startMcpServer();
@@ -223,9 +228,8 @@ public class JdLaptopMcpServer {
         return result;
     }
 
-    private Object handleSearchLaptops(Object arguments) {
+    private Function<Map<String, Object>, Object> handleSearchLaptops = args -> {
         try {
-            Map<String, Object> args = (Map<String, Object>) arguments;
             String keyword = (String) args.get("keyword");
             Number minPriceNum = (Number) args.get("minPrice");
             Number maxPriceNum = (Number) args.get("maxPrice");
@@ -248,9 +252,9 @@ public class JdLaptopMcpServer {
             error.put("error", e.getMessage());
             return error;
         }
-    }
+    };
 
-    private Object handleFindSimilarLaptops(Object arguments) {
+    private Function<Map<String, Object>, Object> handleFindSimilarLaptops = arguments -> {
         try {
             Map<String, Object> args = (Map<String, Object>) arguments;
             String description = (String) args.get("description");
@@ -276,9 +280,9 @@ public class JdLaptopMcpServer {
             error.put("error", e.getMessage());
             return error;
         }
-    }
+    };
 
-    private Object handleGetLaptopById(Object arguments) {
+    private Function<Map<String, Object>, Object> handleGetLaptopById = arguments -> {
         try {
             Map<String, Object> args = (Map<String, Object>) arguments;
             String productId = (String) args.get("productId");
@@ -295,9 +299,9 @@ public class JdLaptopMcpServer {
             error.put("error", e.getMessage());
             return error;
         }
-    }
+    };
 
-    private Object handleRefreshLaptopData(Object arguments) {
+    private Function<Map<String, Object>, Object> handleRefreshLaptopData = arguments -> {
         try {
             laptopSearchService.refreshLaptopData();
             Map<String, Object> result = new HashMap<>();
@@ -310,7 +314,7 @@ public class JdLaptopMcpServer {
             error.put("error", e.getMessage());
             return error;
         }
-    }
+    };
 
     private List<Map<String, Object>> convertLaptopsToMap(List<LaptopInfo> laptops) {
         List<Map<String, Object>> result = new ArrayList<>();
