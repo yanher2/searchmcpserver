@@ -39,4 +39,4 @@ fi
 
 # Run the application
 echo "Starting the application..."
-java -jar target/java-math-server-1.0-SNAPSHOT.jar
+java -jar target/java-search-mcp-server-1.0-SNAPSHOT.jar

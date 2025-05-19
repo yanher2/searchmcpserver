@@ -2,7 +2,7 @@
   "mcpServers": {
     "jdLaptopServer": {
       "command": "java",
-      "args": ["-jar", "target/java-math-server-1.0-SNAPSHOT.jar"],
+      "args": ["-jar", "target/java-search-mcp-server-1.0-SNAPSHOT.jar"],
       "env": {},
       "disabled": false,
       "autoApprove": []
