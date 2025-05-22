@@ -19,6 +19,7 @@ import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JdLaptopMcpServer {
     @Resource
     private LaptopSearchService laptopSearchService;
@@ -27,8 +28,8 @@ public class JdLaptopMcpServer {
 
     private Map<String, String> requestIdToResponse = new ConcurrentHashMap<>();
     private Map<String, Object> toolHandlers = new HashMap<>();
-    private static final org.slf4j.Logger log
-            = org.slf4j.LoggerFactory.getLogger(JdLaptopMcpServer.class);
+    //private static final org.slf4j.Logger log
+    //        = org.slf4j.LoggerFactory.getLogger(JdLaptopMcpServer.class);
     @PostConstruct
     public void init() {
         // 注册工具处理器

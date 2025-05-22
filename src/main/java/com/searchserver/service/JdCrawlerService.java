@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @Slf4j
 public class JdCrawlerService {
-    private static final org.slf4j.Logger log
-            = org.slf4j.LoggerFactory.getLogger(JdCrawlerService.class);
+    //private static final org.slf4j.Logger log
+     //       = org.slf4j.LoggerFactory.getLogger(JdCrawlerService.class);
     @Resource
     private LaptopInfoRepository laptopInfoRepository;
     @Resource
