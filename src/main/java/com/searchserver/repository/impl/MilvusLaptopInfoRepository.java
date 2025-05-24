@@ -11,6 +11,7 @@ import io.milvus.param.*;
 import io.milvus.param.collection.*;
 import io.milvus.param.dml.InsertParam;
 import io.milvus.param.dml.SearchParam;
+import io.milvus.param.index.CreateIndexParam;
 import io.milvus.response.SearchResultsWrapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,6 @@
 package com.searchserver.service;
 
+import com.searchserver.repository.impl.MilvusLaptopInfoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
