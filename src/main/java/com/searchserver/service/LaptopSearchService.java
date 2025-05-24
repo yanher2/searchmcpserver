@@ -12,17 +12,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class LaptopSearchService {
     private static final org.slf4j.Logger log
             = org.slf4j.LoggerFactory.getLogger(LaptopSearchService.class);
-    @Resource
-    private LaptopInfoRepository laptopInfoRepository;
-    @Resource
-    private EmbeddingService embeddingService;
-    @Resource
-    private JdCrawlerService crawlerService;
+    private final LaptopInfoRepository laptopInfoRepository;
+    private final EmbeddingService embeddingService;
+    private final JdCrawlerService crawlerService;
+
+    public LaptopSearchService(LaptopInfoRepository laptopInfoRepository,
+                             EmbeddingService embeddingService,
+                             JdCrawlerService crawlerService) {
+        this.laptopInfoRepository = laptopInfoRepository;
+        this.embeddingService = embeddingService;
+        this.crawlerService = crawlerService;
+    }
 
     public List<LaptopInfo> searchByKeyword(String keyword) {
         return laptopInfoRepository.searchByKeyword(keyword);

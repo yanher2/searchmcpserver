@@ -4,21 +4,20 @@ server:
 spring:
   application:
     name: jd-laptop-search
-  datasource:
-    url: jdbc:postgresql://localhost:5432/jd_laptops
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          lob:
-            non_contextual_creation: true
-    show-sql: false
+  milvus:
+    host: localhost
+    port: 19530
+    collection-name: jd_laptops
+    dimension: 384  # 向量维度
+    index-type: IVF_FLAT  # 索引类型
+    metric-type: L2  # 距离度量类型
+  
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 60000
 
 app:
   jd:
