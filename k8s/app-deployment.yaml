@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jd-laptop-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jd-laptop-app
+  template:
+    metadata:
+      labels:
+        app: jd-laptop-app
+    spec:
+      containers:
+      - name: app
+        image: jd-laptop-app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://postgres:5432/jd_laptops
+        - name: SPRING_DATASOURCE_USERNAME
+          value: postgres
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: postgres
+        - name: CHROME_BINARY_LOCATION
+          value: /usr/bin/google-chrome
+        - name: CHROMEDRIVER_PATH
+          value: /usr/bin/chromedriver
+        volumeMounts:
+        - name: chrome
+          mountPath: /usr/bin/google-chrome
+        - name: chromedriver
+          mountPath: /usr/bin/chromedriver
+      volumes:
+      - name: chrome
+        hostPath:
+          path: /usr/bin/google-chrome
+          type: File
+      - name: chromedriver
+        hostPath:
+          path: /usr/bin/chromedriver
+          type: File
