@@ -33,6 +33,7 @@ public class LaptopInfo {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private double[] embedding;
+    private double[] imageEmbedding;
 
     public Long getId() {
         return id;
@@ -192,5 +193,13 @@ public class LaptopInfo {
 
     public void setEmbedding(double[] embedding) {
         this.embedding = embedding;
+    }
+    
+    public double[] getImageEmbedding() {
+        return imageEmbedding;
+    }
+
+    public void setImageEmbedding(double[] imageEmbedding) {
+        this.imageEmbedding = imageEmbedding;
     }
 }

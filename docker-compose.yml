@@ -21,7 +21,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dockerbuild2
     ports:
       - "8080:8080"
     environment:

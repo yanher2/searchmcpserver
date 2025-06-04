@@ -1,0 +1,28 @@
+# 构建阶段：构建应用
+FROM maven:3.8.5-openjdk-17-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 创建.m2目录
+RUN mkdir -p /root/.m2
+
+# 复制pom.xml
+COPY pom.xml .
+
+# 注意：不再需要下载依赖，因为会使用宿主机的Maven仓库
+
+# 复制源代码
+COPY src ./src
+
+# 构建应用
+RUN mvn clean package -DskipTests -e -X
+
+# 创建一个目录来存储构建结果
+RUN mkdir -p /app/build-result && \
+    cp target/*.jar /app/build-result/app.jar
+
+# 设置工作目录为构建结果目录
+WORKDIR /app/build-result
+
+# 构建结果将在 /app/build-result/app.jar

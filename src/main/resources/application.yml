@@ -5,10 +5,11 @@ spring:
   application:
     name: jd-laptop-search
   milvus:
-    host: localhost
-    port: 19530
+    host: ${MILVUS_HOST:localhost}
+    port: ${MILVUS_PORT:19530}
     collection-name: jd_laptops
-    dimension: 384  # 向量维度
+    text-dimension: 384  # 文本向量维度
+    image-dimension: 512  # 图像向量维度
     index-type: IVF_FLAT  # 索引类型
     metric-type: L2  # 距离度量类型
   

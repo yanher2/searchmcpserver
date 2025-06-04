@@ -15,7 +15,7 @@ import io.milvus.param.index.CreateIndexParam;
 import io.milvus.response.SearchResultsWrapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-
+import io.milvus.param.dml.DeleteParam;
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.util.*;
@@ -67,7 +67,7 @@ public class MilvusLaptopInfoRepository implements LaptopInfoRepository {
         FieldType embeddingField = FieldType.newBuilder()
                 .withName("embedding")
                 .withDataType(DataType.FloatVector)
-                .withDimension(milvusConfig.getDimension())
+                .withDimension(milvusConfig.getTextDimension())
                 .build();
 
         CreateCollectionParam createCollectionParam = CreateCollectionParam.newBuilder()
@@ -147,7 +147,7 @@ public class MilvusLaptopInfoRepository implements LaptopInfoRepository {
     public void deleteById(Long id) {
         redisTemplate.delete(REDIS_KEY_PREFIX + id);
         // Milvus删除操作（注意：Milvus 2.x版本支持删除操作）
-        DeleteEntityParam deleteParam = DeleteEntityParam.newBuilder()
+        DeleteParam deleteParam = DeleteParam.newBuilder()
                 .withCollectionName(milvusConfig.getCollectionName())
                 .withExpr("id in [" + id + "]")
                 .build();
@@ -200,7 +200,7 @@ public class MilvusLaptopInfoRepository implements LaptopInfoRepository {
         }
 
         SearchResultsWrapper wrapper = new SearchResultsWrapper(searchResponse.getData().getResults());
-        List<Long> ids = wrapper.getIDList(0).stream()
+        List<Long> ids = wrapper.getIDScore(0).stream()
                 .map(id -> Long.parseLong(id.toString()))
                 .collect(Collectors.toList());
 
@@ -242,7 +242,7 @@ public class MilvusLaptopInfoRepository implements LaptopInfoRepository {
         }
 
         // 删除Milvus集合中的所有数据
-        DeleteEntityParam deleteParam = DeleteEntityParam.newBuilder()
+        DeleteParam deleteParam = DeleteParam.newBuilder()
                 .withCollectionName(milvusConfig.getCollectionName())
                 .withExpr("1==1")
                 .build();

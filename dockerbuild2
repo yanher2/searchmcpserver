@@ -1,24 +1,8 @@
-# 使用多阶段构建
-# 第一阶段：构建应用
-FROM maven:3.8.4-openjdk-11-slim AS builder
+# 运行环境
+FROM openjdk:17-jdk-slim
 
-# 设置工作目录
-WORKDIR /app
-
-# 复制pom.xml
-COPY pom.xml .
-
-# 下载依赖
-RUN mvn dependency:go-offline
-
-# 复制源代码
-COPY src ./src
-
-# 构建应用
-RUN mvn package -DskipTests
-
-# 第二阶段：运行环境
-FROM openjdk:11-jre-slim
+# 设置参数，用于指定构建镜像
+ARG BUILD_IMAGE=mcpserver1:latest
 
 # 安装Chrome和其他必要的包
 RUN apt-get update && apt-get install -y \
@@ -26,17 +10,18 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     unzip \
     xvfb \
+    curl \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+
 
 # 安装ChromeDriver
-RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1) \
-    && CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") \
-    && wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" \
+RUN CHROME_VERSION=100 \
+    && wget -q "https://chromedriver.storage.googleapis.com/100.0.4896.20/chromedriver_linux64.zip" \
     && unzip chromedriver_linux64.zip -d /usr/local/bin \
     && rm chromedriver_linux64.zip \
     && chmod +x /usr/local/bin/chromedriver
@@ -44,8 +29,8 @@ RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
 # 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制jar文件
-COPY --from=builder /app/target/*.jar app.jar
+# 从构建镜像复制jar文件
+COPY --from=$BUILD_IMAGE /app/build-result/app.jar app.jar
 
 # 设置Chrome无头模式的环境变量
 ENV CHROME_BIN=/usr/bin/google-chrome
