@@ -1,22 +1,37 @@
 # 构建阶段：构建应用
 FROM maven:3.8.5-openjdk-17-slim
 
+# 创建Maven本地仓库目录
+#RUN mkdir -p /mnt/e/apache-maven-3.9.9/repository
+
+# 设置Maven本地仓库路径
+#ENV MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository"
+
 # 设置工作目录
 WORKDIR /app
-
-# 创建.m2目录
-RUN mkdir -p /root/.m2
 
 # 复制pom.xml
 COPY pom.xml .
 
-# 注意：不再需要下载依赖，因为会使用宿主机的Maven仓库
+RUN mkdir -p ~/.m2/conf
+RUN mkdir -p ~/.m2/repository
+# 复制 maven-repo 上下文中的 settings.xml
+COPY --from=maven-repo /conf/settings.xml ~/.m2/conf/settings.xml
+COPY --from=maven-repo /repository ~/.m2/repository
+  
+# 方式一：使用 mvn help:effective-settings 查看完整配置
+RUN output=$(ls -l ~/.m2) && echo "目录内容: $output"
+RUN output=$(ls -l ~/.m2/conf) && echo "目录内容: $output"
+RUN output=$(ls -l ~/.m2/repository) && echo "目录内容: $output"
+
+RUN mvn dependency:go-offline -s ~/.m2/conf/settings.xml \
+-Dmaven.repo.local=~/.m2/repository
 
 # 复制源代码
 COPY src ./src
 
 # 构建应用
-RUN mvn clean package -DskipTests -e -X
+RUN mvn clean package -DskipTests -s ~/.m2/conf/settings.xml
 
 # 创建一个目录来存储构建结果
 RUN mkdir -p /app/build-result && \

@@ -1,8 +1,8 @@
+# 设置参数，用于指定构建镜像（必须在FROM之前声明用于FROM的ARG）
+ARG BUILD_IMAGE=mcpserver1:latest
+
 # 运行环境
 FROM openjdk:17-jdk-slim
-
-# 设置参数，用于指定构建镜像
-ARG BUILD_IMAGE=mcpserver1:latest
 
 # 安装Chrome和其他必要的包
 RUN apt-get update && apt-get install -y \
@@ -16,8 +16,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-
+    && rm -rf /var/lib/apt/lists/*
 
 # 安装ChromeDriver
 RUN CHROME_VERSION=100 \
@@ -30,7 +29,7 @@ RUN CHROME_VERSION=100 \
 WORKDIR /app
 
 # 从构建镜像复制jar文件
-COPY --from=$BUILD_IMAGE /app/build-result/app.jar app.jar
+COPY --from=${BUILD_IMAGE} /app/build-result/app.jar app.jar
 
 # 设置Chrome无头模式的环境变量
 ENV CHROME_BIN=/usr/bin/google-chrome

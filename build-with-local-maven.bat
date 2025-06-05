@@ -4,22 +4,14 @@ setlocal enabledelayedexpansion
 echo 构建使用本地Maven仓库的Docker镜像
 echo =====================================
 
-:: 获取Maven本地仓库路径
-if "%MAVEN_REPO%"=="" (
-    :: 尝试从默认位置获取
-    if exist "%USERPROFILE%\.m2\repository" (
-        set "MAVEN_REPO=%USERPROFILE%\.m2\repository"
-    ) else (
-        echo 错误：未找到Maven本地仓库
-        echo 请设置MAVEN_REPO环境变量指向你的Maven仓库位置
-        exit /b 1
-    )
-)
+:: 设置Maven仓库路径
+set "MAVEN_REPO=E:\apache-maven-3.9.9\repository"
 
 :: 转换路径分隔符（将反斜杠转换为正斜杠）
 set "MAVEN_REPO_UNIX=%MAVEN_REPO:\=/%"
 
 echo 使用Maven仓库路径: %MAVEN_REPO%
+echo 转换后的路径格式: %MAVEN_REPO_UNIX%
 
 :: 构建第一阶段镜像（使用本地Maven仓库）
 echo 正在构建构建阶段镜像...
@@ -34,7 +26,8 @@ if %ERRORLEVEL% neq 0 (
 
 :: 构建第二阶段镜像
 echo 正在构建运行环境镜像...
-docker build -t java-search-mcp-server:latest .
+docker build -t java-search-mcp-server:latest -f dockerbuild2 . ^
+    --build-arg BUILD_IMAGE=java-search-mcp-server-build:latest
 
 if %ERRORLEVEL% neq 0 (
     echo 运行环境镜像构建失败

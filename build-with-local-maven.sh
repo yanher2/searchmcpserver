@@ -13,7 +13,7 @@ if [ -z "$MAVEN_REPO" ]; then
     if [ -f "$HOME/.m2/settings.xml" ]; then
         MAVEN_REPO=$(grep -A 1 "<localRepository>" "$HOME/.m2/settings.xml" | grep -v "<localRepository>" | sed 's/[<>/]//g' | tr -d ' ')
     fi
-
+    
     # 如果没有找到，使用默认路径
     if [ -z "$MAVEN_REPO" ]; then
         MAVEN_REPO="$HOME/.m2/repository"
