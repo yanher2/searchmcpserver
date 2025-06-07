@@ -7,31 +7,42 @@ FROM maven:3.8.5-openjdk-17-slim
 # 设置Maven本地仓库路径
 #ENV MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository"
 
+
 # 设置工作目录
 WORKDIR /app
+  
+
+# 打印Maven本地仓库路径
+# RUN output=$(mvn help:effective-settings | grep -A5 localRepository) && echo "maven local: $output"
 
 # 复制pom.xml
 COPY pom.xml .
 
-RUN mkdir -p ~/.m2/conf
-RUN mkdir -p ~/.m2/repository
+#RUN mkdir -p /root/.m2/conf
+RUN mkdir -p /root/.m2/repository
 # 复制 maven-repo 上下文中的 settings.xml
-COPY --from=maven-repo /conf/settings.xml ~/.m2/conf/settings.xml
-COPY --from=maven-repo /repository ~/.m2/repository
+#COPY --from=maven-repo ./conf/settings.xml /root/.m2/conf/settings.xml
+COPY --from=maven-repo ./repository /root/.m2/repository
   
 # 方式一：使用 mvn help:effective-settings 查看完整配置
-RUN output=$(ls -l ~/.m2) && echo "目录内容: $output"
-RUN output=$(ls -l ~/.m2/conf) && echo "目录内容: $output"
-RUN output=$(ls -l ~/.m2/repository) && echo "目录内容: $output"
+RUN output=$(ls -l /root/.m2) && echo "目录内容: $output"
+#RUN output=$(ls -l /root/.m2/conf) && echo "目录内容: $output"
+RUN output=$(ls -l /root/.m2/repository) && echo "目录内容: $output"
 
-RUN mvn dependency:go-offline -s ~/.m2/conf/settings.xml \
--Dmaven.repo.local=~/.m2/repository
+RUN mvn dependency:go-offline \
+-Dmaven.repo.local=/root/.m2/repository
+#    -DincludePlugins=true
+#    --offline 
+#    -s /root/.m2/conf/settings.xml \
 
 # 复制源代码
 COPY src ./src
 
 # 构建应用
-RUN mvn clean package -DskipTests -s ~/.m2/conf/settings.xml
+RUN mvn clean package  -DskipTests \
+    -Dmaven.repo.local=/root/.m2/repository
+#    --offline
+#  -s /root/.m2/conf/settings.xml
 
 # 创建一个目录来存储构建结果
 RUN mkdir -p /app/build-result && \

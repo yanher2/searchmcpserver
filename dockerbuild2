@@ -1,6 +1,3 @@
-# 设置参数，用于指定构建镜像（必须在FROM之前声明用于FROM的ARG）
-ARG BUILD_IMAGE=mcpserver1:latest
-
 # 运行环境
 FROM openjdk:17-jdk-slim
 
@@ -29,7 +26,7 @@ RUN CHROME_VERSION=100 \
 WORKDIR /app
 
 # 从构建镜像复制jar文件
-COPY --from=${BUILD_IMAGE} /app/build-result/app.jar app.jar
+COPY --from=mcpserver1:localmaven /app/build-result/app.jar app.jar
 
 # 设置Chrome无头模式的环境变量
 ENV CHROME_BIN=/usr/bin/google-chrome
