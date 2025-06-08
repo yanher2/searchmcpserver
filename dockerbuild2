@@ -1,44 +1,14 @@
 # 运行环境
 FROM openjdk:17-jdk-slim
 
-# 安装Chrome和其他必要的包
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
-    xvfb \
-    curl \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# 安装ChromeDriver
-RUN CHROME_VERSION=100 \
-    && wget -q "https://chromedriver.storage.googleapis.com/100.0.4896.20/chromedriver_linux64.zip" \
-    && unzip chromedriver_linux64.zip -d /usr/local/bin \
-    && rm chromedriver_linux64.zip \
-    && chmod +x /usr/local/bin/chromedriver
-
 # 设置工作目录
 WORKDIR /app
 
 # 从构建镜像复制jar文件
 COPY --from=mcpserver1:localmaven /app/build-result/app.jar app.jar
 
-# 设置Chrome无头模式的环境变量
-ENV CHROME_BIN=/usr/bin/google-chrome
-ENV CHROME_PATH=/usr/bin/google-chrome
-ENV DISPLAY=:99
-
-# 创建启动脚本
-RUN echo '#!/bin/bash\nXvfb :99 -screen 0 1280x1024x24 &\nsleep 1\nexec java -jar app.jar' > /app/start.sh \
-    && chmod +x /app/start.sh
-
 # 暴露端口
 EXPOSE 8080
 
 # 启动应用
-CMD ["/app/start.sh"]
+CMD ["java", "-jar", "app.jar"]

@@ -5,8 +5,8 @@ spring:
   application:
     name: jd-laptop-search
   milvus:
-    host: ${MILVUS_HOST:localhost}
-    port: ${MILVUS_PORT:19530}
+    host: 172.26.131.126
+    port: 19530
     collection-name: jd_laptops
     text-dimension: 384  # 文本向量维度
     image-dimension: 512  # 图像向量维度
@@ -15,22 +15,17 @@ spring:
   
   # Redis配置
   redis:
-    host: localhost
+    host: 172.26.131.126
     port: 6379
     database: 0
+    password: 123456
     timeout: 60000
 
 app:
   jd:
     base-url: https://list.jd.com/list.html?cat=670,671,672
     crawl-interval: 3600000 # 1 hour in milliseconds
-  selenium:
-    chrome-options:
-      - "--headless"
-      - "--disable-gpu"
-      - "--no-sandbox"
-      - "--disable-dev-shm-usage"
-      - "--remote-allow-origins=*"
+    user-agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 logging:
   level:
