@@ -2,7 +2,11 @@
   "mcpServers": {
     "jdLaptopServer": {
       "command": "java",
-      "args": ["-jar", "target/java-search-mcp-server-1.0-SNAPSHOT.jar"],
+      "args": [
+        "-jar",
+        "E:/workspace/java-search-mcp-server/target/java-search-mcp-server-1.0-SNAPSHOT.jar"
+      ],
+      "cwd": "E:/workspace/java-search-mcp-server",
       "env": {},
       "disabled": false,
       "autoApprove": []

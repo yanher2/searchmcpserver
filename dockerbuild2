@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # 从构建镜像复制jar文件
-COPY --from=mcpserver1:localmaven /app/build-result/app.jar app.jar
+COPY --from=mcpserver1:latest /app/build-result/app.jar app.jar
 
 # 暴露端口
 EXPOSE 8080
