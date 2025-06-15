@@ -2,17 +2,13 @@ package com.searchserver.service;
 
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.repository.LaptopInfoRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Slf4j
 public class LaptopSearchService {
     private static final org.slf4j.Logger log
             = org.slf4j.LoggerFactory.getLogger(LaptopSearchService.class);

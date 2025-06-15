@@ -1,9 +1,8 @@
 package com.searchserver.service;
 
+import com.searchserver.mcp.StdioMcpServer;
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.repository.LaptopInfoRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,8 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class JdCrawlerService {
     @Resource
     private LaptopInfoRepository laptopInfoRepository;
@@ -35,7 +32,8 @@ public class JdCrawlerService {
 
     @Value("${app.jd.user-agent}")
     private String userAgent;
-
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(JdCrawlerService.class);
     @Scheduled(fixedDelayString = "${app.jd.crawl-interval}")
     public void scheduledCrawl() {
         try {

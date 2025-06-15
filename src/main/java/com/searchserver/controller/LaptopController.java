@@ -2,8 +2,6 @@ package com.searchserver.controller;
 
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.service.LaptopSearchService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/laptops")
-@RequiredArgsConstructor
 public class LaptopController {
     @Resource
     private LaptopSearchService laptopSearchService;

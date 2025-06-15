@@ -3,13 +3,11 @@ package com.searchserver.service;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 
 @Service
-@Slf4j
 public class EmbeddingService {
 
     private EmbeddingModel embeddingModel;

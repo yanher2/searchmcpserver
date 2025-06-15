@@ -93,11 +93,11 @@
         </dependency>
         
         <!-- 工具库 -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -167,13 +167,13 @@
                     <source>17</source>
                     <target>17</target>
                     <encoding>UTF-8</encoding>
-                    <annotationProcessorPaths>
+                    <!--<annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>1.18.38</version>
                         </path>
-                    </annotationProcessorPaths>
+                    </annotationProcessorPaths>-->
                 </configuration>
             </plugin>
         </plugins>

@@ -3,8 +3,6 @@ package com.searchserver.mcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.service.LaptopSearchService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -18,9 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @Component
-@RequiredArgsConstructor
-@Slf4j
-public class JdLaptopMcpServer {
+public class TcpMcpServer {
     @Resource
     private LaptopSearchService laptopSearchService;
     @Resource
@@ -28,8 +24,8 @@ public class JdLaptopMcpServer {
 
     private Map<String, String> requestIdToResponse = new ConcurrentHashMap<>();
     private Map<String, Object> toolHandlers = new HashMap<>();
-    //private static final org.slf4j.Logger log
-    //        = org.slf4j.LoggerFactory.getLogger(JdLaptopMcpServer.class);
+    private static final org.slf4j.Logger log
+            = org.slf4j.LoggerFactory.getLogger(TcpMcpServer.class);
     @PostConstruct
     public void init() {
         // 注册工具处理器
