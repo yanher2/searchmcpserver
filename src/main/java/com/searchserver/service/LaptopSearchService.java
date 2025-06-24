@@ -2,8 +2,10 @@ package com.searchserver.service;
 
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.repository.LaptopInfoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,9 +14,12 @@ import java.util.stream.Collectors;
 public class LaptopSearchService {
     private static final org.slf4j.Logger log
             = org.slf4j.LoggerFactory.getLogger(LaptopSearchService.class);
-    private final LaptopInfoRepository laptopInfoRepository;
-    private final EmbeddingService embeddingService;
-    private final JdCrawlerService crawlerService;
+    @Resource
+    private LaptopInfoRepository laptopInfoRepository;
+    @Resource
+    private EmbeddingService embeddingService;
+    @Resource
+    private JdCrawlerService crawlerService;
 
     public LaptopSearchService(LaptopInfoRepository laptopInfoRepository,
                              EmbeddingService embeddingService,

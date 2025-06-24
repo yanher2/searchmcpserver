@@ -1,3 +1,4 @@
+/*
 package com.searchserver.mcp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,9 +20,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+*/
 /**
  * MCP服务器的核心实现，通过标准输入输出与客户端通信
- */
+ *//*
+
 @Component
 public class StdioMcpServer {
     @Resource
@@ -39,9 +42,11 @@ public class StdioMcpServer {
     private boolean isRunning;
     private static final org.slf4j.Logger log
             = org.slf4j.LoggerFactory.getLogger(StdioMcpServer.class);
-    /**
+    */
+/**
      * 创建一个新的MCP服务器
-     */
+     *//*
+
     public StdioMcpServer() {
         this.tools = new HashMap<>();
         this.methodHandlers = new HashMap<>();
@@ -89,13 +94,15 @@ public class StdioMcpServer {
         start();
     }
 
-    /**
+    */
+/**
      * 注册一个工具
      * @param name 工具名称
      * @param description 工具描述
      * @param inputSchema 输入参数Schema
      * @param handler 处理函数
-     */
+     *//*
+
     public void registerTool(String name, String description, JsonNode inputSchema, 
                             Function<JsonNode, CompletableFuture<JsonNode>> handler) {
         Map<String, Object> tool = new HashMap<>();
@@ -106,18 +113,22 @@ public class StdioMcpServer {
         tools.put(name, tool);
     }
 
-    /**
+    */
+/**
      * 注册一个方法处理程序
      * @param method 方法名称
      * @param handler 处理程序
-     */
+     *//*
+
     public void registerMethodHandler(String method, Function<JsonNode, CompletableFuture<JsonNode>> handler) {
         methodHandlers.put(method, handler);
     }
 
-    /**
+    */
+/**
      * 启动服务器，使用标准输入/输出进行通信
-     */
+     *//*
+
     public void start() {
         this.input = new BufferedReader(new InputStreamReader(System.in));
         this.output = new PrintWriter(System.out, true);
@@ -133,9 +144,11 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 处理传入的消息
-     */
+     *//*
+
     private void processMessages() throws IOException {
         String line;
         while (isRunning && (line = input.readLine()) != null) {
@@ -157,10 +170,12 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 处理请求
      * @param request 请求消息
-     */
+     *//*
+
     private void handleRequest(McpMessage request) {
         String method = request.getMethod();
         String id = request.getId();
@@ -195,11 +210,13 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 发送成功响应
      * @param id 请求ID
      * @param result 结果
-     */
+     *//*
+
     private void sendSuccessResponse(String id, Object result) {
         McpMessage response = new McpMessage(id, result);
         try {
@@ -210,11 +227,13 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 发送错误响应
      * @param id 请求ID
      * @param error 错误
-     */
+     *//*
+
     private void sendErrorResponse(String id, McpError error) {
         McpMessage response = new McpMessage(id, error);
         try {
@@ -225,22 +244,26 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 处理列出工具的请求
      * @param params 参数
      * @return 工具列表
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleListTools(JsonNode params) {
         ObjectNode result = objectMapper.createObjectNode();
         result.set("tools", objectMapper.valueToTree(tools.values()));
         return CompletableFuture.completedFuture(result);
     }
 
-    /**
+    */
+/**
      * 处理调用工具的请求
      * @param params 参数
      * @return 工具调用结果
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleCallTool(JsonNode params) {
         String toolName = params.has("name") ? params.get("name").asText() : null;
         if (toolName == null) {
@@ -273,9 +296,11 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * 创建搜索笔记本电脑的Schema
-     */
+     *//*
+
     private JsonNode createSearchLaptopsSchema() {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
@@ -301,9 +326,11 @@ public class StdioMcpServer {
         return schema;
     }
 
-    /**
+    */
+/**
      * 创建查找相似笔记本电脑的Schema
-     */
+     *//*
+
     private JsonNode createFindSimilarLaptopsSchema() {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
@@ -329,9 +356,11 @@ public class StdioMcpServer {
         return schema;
     }
 
-    /**
+    */
+/**
      * 创建根据ID获取笔记本电脑的Schema
-     */
+     *//*
+
     private JsonNode createGetLaptopByIdSchema() {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
@@ -348,16 +377,20 @@ public class StdioMcpServer {
         return schema;
     }
 
-    /**
+    */
+/**
      * 创建刷新笔记本电脑数据的Schema
-     */
+     *//*
+
     private JsonNode createRefreshLaptopDataSchema() {
         return objectMapper.createObjectNode().put("type", "object");
     }
 
-    /**
+    */
+/**
      * 处理搜索笔记本电脑的请求
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleSearchLaptops(JsonNode args) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -387,9 +420,11 @@ public class StdioMcpServer {
         });
     }
 
-    /**
+    */
+/**
      * 处理查找相似笔记本电脑的请求
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleFindSimilarLaptops(JsonNode args) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -416,9 +451,11 @@ public class StdioMcpServer {
         });
     }
 
-    /**
+    */
+/**
      * 处理根据ID获取笔记本电脑的请求
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleGetLaptopById(JsonNode args) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -438,9 +475,11 @@ public class StdioMcpServer {
         });
     }
 
-    /**
+    */
+/**
      * 处理刷新笔记本电脑数据的请求
-     */
+     *//*
+
     private CompletableFuture<JsonNode> handleRefreshLaptopData(JsonNode args) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -490,17 +529,21 @@ public class StdioMcpServer {
         return result;
     }
 
-    /**
+    */
+/**
      * 停止服务器
-     */
+     *//*
+
     public void stop() {
         this.isRunning = false;
         System.out.println("MCP Server stopped");
     }
 
-    /**
+    */
+/**
      * 服务器信息类
-     */
+     *//*
+
     private static class ServerInfo {
         private final String name;
         private final String version;
@@ -519,9 +562,11 @@ public class StdioMcpServer {
         }
     }
 
-    /**
+    */
+/**
      * MCP异常类
-     */
+     *//*
+
     public static class McpException extends Exception {
         private final McpError error;
 
@@ -535,3 +580,4 @@ public class StdioMcpServer {
         }
     }
 }
+*/

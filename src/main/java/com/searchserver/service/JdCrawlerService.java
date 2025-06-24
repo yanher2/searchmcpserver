@@ -1,6 +1,5 @@
 package com.searchserver.service;
 
-import com.searchserver.mcp.StdioMcpServer;
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.repository.LaptopInfoRepository;
 import org.jsoup.Jsoup;

@@ -24,14 +24,16 @@ spring:
 app:
   jd:
     base-url: https://list.jd.com/list.html?cat=670,671,672
-    crawl-interval: 60000 # 每60秒爬取数据
+    crawl-interval: 300000 # 每60秒爬取数据
     user-agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 logging:
   level:
     root: INFO
     com.mathserver: DEBUG
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
+    org.springframework.boot.autoconfigure.web.servlet: DEBUG
+    org.springframework.boot.autoconfigure.web: DEBUG
     org.hibernate: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
