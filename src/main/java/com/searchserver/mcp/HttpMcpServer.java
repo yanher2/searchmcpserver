@@ -1,211 +1,190 @@
 package com.searchserver.mcp;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.searchserver.model.LaptopInfo;
 import com.searchserver.service.LaptopSearchService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-/**
- * HTTP MCP服务器，复用LaptopSearchService实现功能
- */
 @RestController
 @RequestMapping("/api/mcp")
 public class HttpMcpServer {
 
-    @Resource
+    @Autowired
     private ObjectMapper objectMapper;
 
-    @Resource
+    @Autowired
     private LaptopSearchService laptopSearchService;
 
-    // 直接在类中定义工具列表
-    private static final List<String> TOOLS = List.of(
-        "search_laptops",
-        "find_similar_laptops",
-        "get_laptop_by_id",
-        "refresh_laptop_data"
-    );
+    /**
+     * 健康检查接口，解决 Cursor 检测根路径 404 问题
+     */
+    @PostMapping("")
+    @GetMapping("")
+    public Map<String, Object> health() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "ok");
+        return result;
+    }
 
     /**
-     * 列出所有可用工具
+     * SSE推送工具定义，首条为工具定义，后续为心跳
      */
-    @GetMapping("/tools")
-    public CompletableFuture<JsonNode> listTools() {
-        ObjectNode response = objectMapper.createObjectNode();
-        ArrayNode toolsArray = response.putArray("tools");
-        TOOLS.forEach(toolsArray::add);
-        return CompletableFuture.completedFuture(response);
+    @GetMapping(value = "/tools", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> listTools() {
+        // 构造工具定义
+        ArrayNode tools = objectMapper.createArrayNode();
+
+        ObjectNode searchLaptops = objectMapper.createObjectNode();
+        searchLaptops.put("name", "search_laptops");
+        searchLaptops.put("description", "Search laptops by keyword or price range");
+        ArrayNode searchLaptopsParams = objectMapper.createArrayNode();
+        searchLaptopsParams.add(objectMapper.createObjectNode()
+            .put("name", "keyword").put("type", "string").put("description", "Search keyword"));
+        searchLaptopsParams.add(objectMapper.createObjectNode()
+            .put("name", "minPrice").put("type", "number").put("description", "Minimum price"));
+        searchLaptopsParams.add(objectMapper.createObjectNode()
+            .put("name", "maxPrice").put("type", "number").put("description", "Maximum price"));
+        searchLaptops.set("parameters", searchLaptopsParams);
+        tools.add(searchLaptops);
+
+        ObjectNode findSimilar = objectMapper.createObjectNode();
+        findSimilar.put("name", "find_similar_laptops");
+        findSimilar.put("description", "Find laptops similar to given description or product");
+        ArrayNode findSimilarParams = objectMapper.createArrayNode();
+        findSimilarParams.add(objectMapper.createObjectNode()
+            .put("name", "description").put("type", "string").put("description", "Description of desired laptop"));
+        findSimilarParams.add(objectMapper.createObjectNode()
+            .put("name", "laptopId").put("type", "string").put("description", "ID of reference laptop"));
+        findSimilarParams.add(objectMapper.createObjectNode()
+            .put("name", "limit").put("type", "integer").put("description", "Maximum number of results"));
+        findSimilar.set("parameters", findSimilarParams);
+        tools.add(findSimilar);
+
+        ObjectNode getById = objectMapper.createObjectNode();
+        getById.put("name", "get_laptop_by_id");
+        getById.put("description", "Get laptop details by product ID");
+        ArrayNode getByIdParams = objectMapper.createArrayNode();
+        getByIdParams.add(objectMapper.createObjectNode()
+            .put("name", "productId").put("type", "string").put("description", "Unique product identifier"));
+        getById.set("parameters", getByIdParams);
+        tools.add(getById);
+
+        ObjectNode refresh = objectMapper.createObjectNode();
+        refresh.put("name", "refresh_laptop_data");
+        refresh.put("description", "Refresh laptop data from source");
+        ArrayNode refreshParams = objectMapper.createArrayNode();
+        refresh.set("parameters", refreshParams);
+        tools.add(refresh);
+
+        // 正确推送：只加一个 data: 前缀
+        String toolDef = tools.toString() + "\n\n";
+
+        // 后续心跳
+        Flux<String> heartbeat = Flux.interval(Duration.ofSeconds(15))
+            .map(i -> ": heartbeat\n\n");
+
+        return Flux.concat(
+            Flux.just(toolDef),
+            heartbeat
+        );
     }
 
     /**
      * 调用工具
      */
     @PostMapping("/tools/{toolName}")
-    public CompletableFuture<JsonNode> callTool(
+    public Mono<JsonNode> callTool(
             @PathVariable String toolName,
             @RequestBody JsonNode arguments) {
-        // 验证工具是否存在
-        if (!isToolExists(toolName)) {
-            return CompletableFuture.completedFuture(createErrorResponse("Unknown tool: " + toolName));
-        }
-
-        // 根据工具名称路由到对应服务方法
-        switch (toolName) {
-            case "search_laptops":
-                return handleSearchLaptops(arguments);
-            case "find_similar_laptops":
-                return handleFindSimilarLaptops(arguments);
-            case "get_laptop_by_id":
-                return handleGetLaptopById(arguments);
-            case "refresh_laptop_data":
-                return handleRefreshLaptopData();
-            default:
-                return CompletableFuture.completedFuture(createErrorResponse("Tool not implemented: " + toolName));
-        }
+        return switch (toolName) {
+            case "search_laptops" -> handleSearchLaptops(arguments);
+            case "find_similar_laptops" -> handleFindSimilarLaptops(arguments);
+            case "get_laptop_by_id" -> handleGetLaptopById(arguments);
+            case "refresh_laptop_data" -> handleRefreshLaptopData();
+            default -> Mono.just(createErrorResponse("Unknown tool: " + toolName));
+        };
     }
 
-    private boolean isToolExists(String toolName) {
-        return TOOLS.contains(toolName);
-    }
+    private Mono<JsonNode> handleSearchLaptops(JsonNode args) {
+        return Mono.<JsonNode>fromCallable(() -> {
+            String keyword = args.has("keyword") ? args.get("keyword").asText() : null;
+            Double minPrice = args.has("minPrice") ? args.get("minPrice").asDouble() : null;
+            Double maxPrice = args.has("maxPrice") ? args.get("maxPrice").asDouble() : null;
 
-    /**
-     * 搜索笔记本电脑
-     */
-    @PostMapping("/tools/search_laptops")
-    public CompletableFuture<JsonNode> searchLaptops(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice) {
-        ObjectNode arguments = objectMapper.createObjectNode();
-        if (keyword != null) arguments.put("keyword", keyword);
-        if (minPrice != null) arguments.put("minPrice", minPrice);
-        if (maxPrice != null) arguments.put("maxPrice", maxPrice);
-        return handleSearchLaptops(arguments);
-    }
-
-    private CompletableFuture<JsonNode> handleSearchLaptops(JsonNode args) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                String keyword = args.has("keyword") ? args.get("keyword").asText() : null;
-                Double minPrice = args.has("minPrice") ? args.get("minPrice").asDouble() : null;
-                Double maxPrice = args.has("maxPrice") ? args.get("maxPrice").asDouble() : null;
-
-                List<LaptopInfo> results;
-                if (keyword != null && !keyword.trim().isEmpty()) {
-                    results = laptopSearchService.searchByKeyword(keyword);
-                } else if (minPrice != null && maxPrice != null) {
-                    results = laptopSearchService.searchByPriceRange(
-                        BigDecimal.valueOf(minPrice),
-                        BigDecimal.valueOf(maxPrice)
-                    );
-                } else {
-                    throw new IllegalArgumentException("必须提供关键词或价格范围");
-                }
-
-                return objectMapper.valueToTree(convertLaptopsToMap(results));
-            } catch (Exception e) {
-                return createErrorResponse(e.getMessage());
+            List<LaptopInfo> results;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                results = laptopSearchService.searchByKeyword(keyword);
+            } else if (minPrice != null && maxPrice != null) {
+                results = laptopSearchService.searchByPriceRange(
+                        java.math.BigDecimal.valueOf(minPrice),
+                        java.math.BigDecimal.valueOf(maxPrice)
+                );
+            } else {
+                throw new IllegalArgumentException("必须提供关键词或价格范围");
             }
-        });
+
+            return objectMapper.valueToTree(convertLaptopsToMap(results));
+        }).onErrorResume(e -> Mono.just(createErrorResponse(e.getMessage())));
     }
 
-    /**
-     * 查找相似笔记本电脑
-     */
-    @PostMapping("/tools/find_similar_laptops")
-    public CompletableFuture<JsonNode> findSimilarLaptops(
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String laptopId,
-            @RequestParam(defaultValue = "5") int limit) {
-        ObjectNode arguments = objectMapper.createObjectNode();
-        if (description != null) arguments.put("description", description);
-        if (laptopId != null) arguments.put("laptopId", laptopId);
-        arguments.put("limit", limit);
-        return handleFindSimilarLaptops(arguments);
-    }
+    private Mono<JsonNode> handleFindSimilarLaptops(JsonNode args) {
+        return Mono.<JsonNode>fromCallable(() -> {
+            String description = args.has("description") ? args.get("description").asText() : null;
+            String laptopId = args.has("laptopId") ? args.get("laptopId").asText() : null;
+            int limit = args.has("limit") ? args.get("limit").asInt() : 5;
 
-    private CompletableFuture<JsonNode> handleFindSimilarLaptops(JsonNode args) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                String description = args.has("description") ? args.get("description").asText() : null;
-                String laptopId = args.has("laptopId") ? args.get("laptopId").asText() : null;
-                int limit = args.has("limit") ? args.get("limit").asInt() : 5;
-
-                List<LaptopInfo> results;
-                if (description != null && !description.trim().isEmpty()) {
-                    results = laptopSearchService.findSimilarLaptops(description, limit);
-                } else if (laptopId != null) {
-                    results = laptopSearchService.findSimilarLaptops(laptopId, limit);
-                } else {
-                    throw new IllegalArgumentException("必须提供描述或笔记本电脑ID");
-                }
-
-                return objectMapper.valueToTree(convertLaptopsToMap(results));
-            } catch (Exception e) {
-                return createErrorResponse(e.getMessage());
+            List<LaptopInfo> results;
+            if (description != null && !description.trim().isEmpty()) {
+                results = laptopSearchService.findSimilarLaptops(description, limit);
+            } else if (laptopId != null) {
+                results = laptopSearchService.findSimilarLaptops(laptopId, limit);
+            } else {
+                throw new IllegalArgumentException("必须提供描述或笔记本电脑ID");
             }
-        });
+
+            return objectMapper.valueToTree(convertLaptopsToMap(results));
+        }).onErrorResume(e -> Mono.just(createErrorResponse(e.getMessage())));
     }
 
-    /**
-     * 根据ID获取笔记本电脑详情
-     */
-    @GetMapping("/tools/get_laptop_by_id")
-    public CompletableFuture<JsonNode> getLaptopById(
-            @RequestParam String productId) {
-        ObjectNode arguments = objectMapper.createObjectNode();
-        arguments.put("productId", productId);
-        return handleGetLaptopById(arguments);
-    }
-
-    private CompletableFuture<JsonNode> handleGetLaptopById(JsonNode args) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                String productId = args.get("productId").asText();
-                if (productId == null || productId.trim().isEmpty()) {
-                    throw new IllegalArgumentException("产品ID不能为空");
-                }
-
-                LaptopInfo laptop = laptopSearchService.findByProductId(productId);
-                return objectMapper.valueToTree(convertLaptopToMap(laptop));
-            } catch (Exception e) {
-                return createErrorResponse(e.getMessage());
+    private Mono<JsonNode> handleGetLaptopById(JsonNode args) {
+        return Mono.<JsonNode>fromCallable(() -> {
+            String productId = args.get("productId").asText();
+            if (productId == null || productId.trim().isEmpty()) {
+                throw new IllegalArgumentException("产品ID不能为空");
             }
-        });
+            LaptopInfo laptop = laptopSearchService.findByProductId(productId);
+            return objectMapper.valueToTree(convertLaptopToMap(laptop));
+        }).onErrorResume(e -> Mono.just(createErrorResponse(e.getMessage())));
     }
 
-    /**
-     * 刷新笔记本电脑数据
-     */
-    @PostMapping("/tools/refresh_laptop_data")
-    public CompletableFuture<JsonNode> refreshLaptopData() {
-        return handleRefreshLaptopData();
-    }
-
-    private CompletableFuture<JsonNode> handleRefreshLaptopData() {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                laptopSearchService.refreshLaptopData();
-                ObjectNode result = objectMapper.createObjectNode();
-                result.put("status", "success");
-                result.put("message", "笔记本电脑数据刷新成功");
-                return result;
-            } catch (Exception e) {
-                return createErrorResponse(e.getMessage());
-            }
-        });
+    private Mono<JsonNode> handleRefreshLaptopData() {
+        return Mono.<JsonNode>fromCallable(() -> {
+            laptopSearchService.refreshLaptopData();
+            ObjectNode result = objectMapper.createObjectNode();
+            result.put("status", "success");
+            result.put("message", "笔记本电脑数据刷新成功");
+            return result;
+        }).onErrorResume(e -> Mono.just(createErrorResponse(e.getMessage())));
     }
 
     private List<Map<String, Object>> convertLaptopsToMap(List<LaptopInfo> laptops) {
