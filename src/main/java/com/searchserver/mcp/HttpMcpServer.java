@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,25 +34,152 @@ public class HttpMcpServer {
     @Autowired
     private LaptopSearchService laptopSearchService;
 
-    /**
-     * 健康检查接口，解决 Cursor 检测根路径 404 问题
-     */
-    @PostMapping("")
-    @GetMapping("")
-    public Map<String, Object> health() {
+
+    @PostMapping(value = "/initialize", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> initialize(@RequestBody Map<String, Object> body) {
+        // 获取 id 字段，默认 0
+        Object idObj = body.get("id");
+        Object paramsObj = body.get("params");
+        int id = 0;
+        if (idObj instanceof Integer) {
+            id = (Integer) idObj;
+        } else if (idObj instanceof String) {
+            try {
+                id = Integer.parseInt((String) idObj);
+            } catch (NumberFormatException e) {
+                id = 0;
+            }
+        }
+
+        // 解析 protocolVersion
+        String protocolVersion = "2025-06-18";
+        if (paramsObj instanceof Map) {
+            Map params = (Map) paramsObj;
+            if (params.get("protocolVersion") != null) {
+                protocolVersion = params.get("protocolVersion").toString();
+            }
+        }
+
+        // 构造 tools 列表（根路径的 tools 数组）
+        List<Map<String, Object>> toolsList = new ArrayList<>();
+        {
+            Map<String, Object> tool = new HashMap<>();
+            tool.put("name", "search_laptops");
+            tool.put("description", "Search laptops by keyword or price range");
+            List<Map<String, Object>> params = new ArrayList<>();
+            params.add(Map.of("name", "keyword", "type", "string", "description", "Search keyword"));
+            params.add(Map.of("name", "minPrice", "type", "number", "description", "Minimum price"));
+            params.add(Map.of("name", "maxPrice", "type", "number", "description", "Maximum price"));
+            tool.put("parameters", params);
+            Map<String, Object> searchLaptopsInputSchema = new HashMap<>();
+            searchLaptopsInputSchema.put("type", "object");
+            Map<String, Object> searchLaptopsProps = new HashMap<>();
+            searchLaptopsProps.put("keyword", Map.of("type", "string", "description", "Search keyword"));
+            searchLaptopsProps.put("minPrice", Map.of("type", "number", "description", "Minimum price"));
+            searchLaptopsProps.put("maxPrice", Map.of("type", "number", "description", "Maximum price"));
+            searchLaptopsInputSchema.put("properties", searchLaptopsProps);
+            searchLaptopsInputSchema.put("required", new ArrayList<>());
+            tool.put("inputSchema", searchLaptopsInputSchema);
+            toolsList.add(tool);
+        }
+        {
+            Map<String, Object> tool = new HashMap<>();
+            tool.put("name", "find_similar_laptops");
+            tool.put("description", "Find laptops similar to given description or product");
+            List<Map<String, Object>> params = new ArrayList<>();
+            params.add(Map.of("name", "description", "type", "string", "description", "Description of desired laptop"));
+            params.add(Map.of("name", "laptopId", "type", "string", "description", "ID of reference laptop"));
+            params.add(Map.of("name", "limit", "type", "integer", "description", "Maximum number of results"));
+            tool.put("parameters", params);
+            Map<String, Object> findSimilarInputSchema = new HashMap<>();
+            findSimilarInputSchema.put("type", "object");
+            Map<String, Object> findSimilarProps = new HashMap<>();
+            findSimilarProps.put("description", Map.of("type", "string", "description", "Description of desired laptop"));
+            findSimilarProps.put("laptopId", Map.of("type", "string", "description", "ID of reference laptop"));
+            findSimilarProps.put("limit", Map.of("type", "integer", "description", "Maximum number of results"));
+            findSimilarInputSchema.put("properties", findSimilarProps);
+            findSimilarInputSchema.put("required", new ArrayList<>());
+            tool.put("inputSchema", findSimilarInputSchema);
+            toolsList.add(tool);
+        }
+        {
+            Map<String, Object> tool = new HashMap<>();
+            tool.put("name", "get_laptop_by_id");
+            tool.put("description", "Get laptop details by product ID");
+            List<Map<String, Object>> params = new ArrayList<>();
+            params.add(Map.of("name", "productId", "type", "string", "description", "Unique product identifier"));
+            tool.put("parameters", params);
+            Map<String, Object> getByIdInputSchema = new HashMap<>();
+            getByIdInputSchema.put("type", "object");
+            Map<String, Object> getByIdProps = new HashMap<>();
+            getByIdProps.put("productId", Map.of("type", "string", "description", "Unique product identifier"));
+            getByIdInputSchema.put("properties", getByIdProps);
+            getByIdInputSchema.put("required", new ArrayList<>());
+            tool.put("inputSchema", getByIdInputSchema);
+            toolsList.add(tool);
+        }
+        {
+            Map<String, Object> tool = new HashMap<>();
+            tool.put("name", "refresh_laptop_data");
+            tool.put("description", "Refresh laptop data from source");
+            tool.put("parameters", new ArrayList<>());
+            Map<String, Object> refreshInputSchema = new HashMap<>();
+            refreshInputSchema.put("type", "object");
+            refreshInputSchema.put("properties", new HashMap<>());
+            refreshInputSchema.put("required", new ArrayList<>());
+            tool.put("inputSchema", refreshInputSchema);
+            toolsList.add(tool);
+        }
+        // 构造 capabilities
+        Map<String, Object> capabilities = new HashMap<>();
+        // capabilities.tools 是对象，包含 methods 和 tools
+        Map<String, Object> toolsObj = new HashMap<>();
+        List<String> methods = new ArrayList<>();
+        methods.add("search_laptops");
+        methods.add("find_similar_laptops");
+        methods.add("get_laptop_by_id");
+        methods.add("refresh_laptop_data");
+        toolsObj.put("methods", methods);
+        toolsObj.put("tools", toolsList); // 这里放同样的工具列表
+        capabilities.put("tools", toolsObj);
+        // 其它功能为空对象
+        capabilities.put("prompts", new HashMap<>());
+        capabilities.put("resources", new HashMap<>());
+        capabilities.put("logging", new HashMap<>());
+        Map<String, Object> roots = new HashMap<>();
+        roots.put("listChanged", false);
+        capabilities.put("roots", roots);
+
+        // 构造 serverInfo
+        Map<String, Object> serverInfo = new HashMap<>();
+        serverInfo.put("name", "java-search-mcp-server");
+        serverInfo.put("version", "1.0.0");
+
+        // 构造 result
         Map<String, Object> result = new HashMap<>();
-        result.put("status", "ok");
-        return result;
+        result.put("protocolVersion", protocolVersion);
+        result.put("capabilities", capabilities);
+        result.put("serverInfo", serverInfo);
+        result.put("tools", toolsList); // 根路径的 tools 数组
+
+        // 构造 JSON-RPC 响应
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("jsonrpc", "2.0");
+        resp.put("id", id);
+        resp.put("result", result);
+        return resp;
     }
 
     /**
      * SSE推送工具定义，首条为工具定义，后续为心跳
      */
-    @GetMapping(value = "/tools", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> listTools() {
+    @PostMapping(value = "/tools", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> listTools(@RequestBody Map<String, Object> body) {
+        // 获取 id 字段，默认 0
+        int id = (int)body.get("id");
+
         // 构造工具定义
         ArrayNode tools = objectMapper.createArrayNode();
-
         ObjectNode searchLaptops = objectMapper.createObjectNode();
         searchLaptops.put("name", "search_laptops");
         searchLaptops.put("description", "Search laptops by keyword or price range");
@@ -96,12 +222,27 @@ public class HttpMcpServer {
         refresh.set("parameters", refreshParams);
         tools.add(refresh);
 
-        // 正确推送：只加一个 data: 前缀
-        String toolDef = tools.toString() + "\n\n";
+        // 构造 JSON-RPC 2.0 格式
+        ObjectNode params = objectMapper.createObjectNode();
+        params.set("tools", tools);
+        ObjectNode rpc = objectMapper.createObjectNode();
+        rpc.put("jsonrpc", "2.0");
+        rpc.put("id", id);
+        rpc.set("params", params);
 
-        // 后续心跳
+        // SSE 格式
+        String toolDef = " " + rpc.toString() + "\n\n";
+
+        // 心跳包同样用 JSON-RPC 2.0 格式
+        ObjectNode heartbeatResult = objectMapper.createObjectNode();
+        heartbeatResult.put("type", "heartbeat");
+        ObjectNode heartbeatRpc = objectMapper.createObjectNode();
+        heartbeatRpc.put("jsonrpc", "2.0");
+        heartbeatRpc.put("id", id);
+        heartbeatRpc.set("params", heartbeatResult);
+
         Flux<String> heartbeat = Flux.interval(Duration.ofSeconds(15))
-            .map(i -> ": heartbeat\n\n");
+            .map(i -> " " + heartbeatRpc.toString() + "\n\n");
 
         return Flux.concat(
             Flux.just(toolDef),
